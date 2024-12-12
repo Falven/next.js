@@ -5,6 +5,7 @@
   Forked to add support for `ignoreList`.
   Keep in sync with packages/next/webpack-plugins/eval-source-map-dev-tool-plugin.js
 */
+import path from 'path'
 import {
   type webpack,
   type SourceMapDevToolPluginOptions,
@@ -76,6 +77,8 @@ export default class EvalSourceMapDevToolPlugin {
 
     // fork
     this.shouldIgnorePath = options.shouldIgnorePath ?? (() => false)
+
+    this.options.sourceRoot = inputOptions.sourceRoot || ''
   }
 
   /**
@@ -166,8 +169,8 @@ export default class EvalSourceMapDevToolPlugin {
               const module = compilation.findModule(sourceMapSource)
               return module || sourceMapSource
             })
-            let moduleFilenames = modules.map((module) =>
-              ModuleFilenameHelpers.createFilename(
+            let moduleFilenames = modules.map((module) => {
+              const filename = ModuleFilenameHelpers.createFilename(
                 module,
                 {
                   moduleFilenameTemplate: this.moduleFilenameTemplate,
@@ -179,7 +182,13 @@ export default class EvalSourceMapDevToolPlugin {
                   hashFunction: compilation.outputOptions.hashFunction!,
                 }
               )
-            )
+              if (path.isAbsolute(filename) && options.sourceRoot) {
+                return path
+                  .relative(options.sourceRoot, filename)
+                  .replace(/\\/g, '/')
+              }
+              return filename
+            })
             moduleFilenames = ModuleFilenameHelpers.replaceDuplicates(
               moduleFilenames,
               (filename, _i, n) => {

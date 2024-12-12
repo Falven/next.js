@@ -80,6 +80,7 @@ export const base = curry(function base(
       new EvalSourceMapDevToolPlugin({
         moduleFilenameTemplate: config.output?.devtoolModuleFilenameTemplate,
         shouldIgnorePath,
+        sourceRoot: ctx.rootDirectory,
       })
     )
   }
